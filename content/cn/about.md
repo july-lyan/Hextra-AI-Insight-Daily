@@ -5,7 +5,7 @@ sidebar:
   exclude: true
 ---
 
-#### 👋 何夕2077 / justlovemaki
+#### 👋 刘大雁 / justlovemaki
 
 > 十载代码指尖凉，胸中块垒郁未扬。
 > 忽闻智能风雷动，誓向云天搏一场。

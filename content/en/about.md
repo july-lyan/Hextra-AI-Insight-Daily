@@ -4,7 +4,7 @@ type: about
 sidebar:
   exclude: true
 ---
-#### Hexi 2077 / justlovemaki
+#### Liu Dayan / justlovemaki
 
 Ten years of coding, cool fingertips, but a fire in the belly brewing.
 Now, with AI's thunderous arrival, I'm ready to take on the world!

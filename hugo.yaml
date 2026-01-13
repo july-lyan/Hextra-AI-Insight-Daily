@@ -1,5 +1,5 @@
 # Hugo configuration file
-title: 何夕2077的AI资讯日报 | 精选AI新闻与工具 | 洞悉AI前沿动态
+title: 刘大雁AI日报 | 精选AI新闻与工具 | 洞悉AI前沿动态
 
 timezone: Asia/Shanghai
 enableRobotsTXT: true
@@ -67,7 +67,7 @@ params:
   logo: "images/logo-dark.png"
   
   author:
-    name: "何夕2077的AI资讯日报 | 精选AI新闻与工具 | 洞悉AI前沿动态"
+    name: "刘大雁AI日报 | 精选AI新闻与工具 | 洞悉AI前沿动态"
     bio: "去海边整点薯条"
     email: "justlikemaki@qq.com"
     website: "https://ai.hubtoday.app/about/"
@@ -77,7 +77,7 @@ params:
         
   publisher:
     type: "Person" 
-    name: "何夕2077的AI资讯日报 | 精选AI新闻与工具 | 洞悉AI前沿动态"
+    name: "刘大雁AI日报 | 精选AI新闻与工具 | 洞悉AI前沿动态"
     url: "https://ai.hubtoday.app/about/"
     sameAs:
       - "https://github.com/justlovemaki"
@@ -147,5 +147,5 @@ languages:
   en:
     contentDir: content/en
     languageName: English
-    title: Hex2077's AI Daily | AI News | AI Tools | AI Insights
+    title: Liu Dayan's AI Daily | AI News | AI Tools | AI Insights
     weight: 2
