@@ -1,0 +1,279 @@
+name: Sync to Notion
+
+on:
+  # 在内容更新工作流完成后触发
+  workflow_run:
+    workflows: ["Update Content from Daily Notes"]
+    types:
+      - completed
+  
+  # 也可以手动触发
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '要同步的日期 (格式: YYYY-MM-DD，留空则同步最新)'
+        required: false
+        default: ''
+  
+  # 定时触发：每天 UTC 时间 1:00 (北京时间早上 9:00)
+  schedule:
+    - cron: '0 1 * * *'
+
+jobs:
+  sync-to-notion:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm install @notionhq/client
+
+      - name: Find latest content file
+        id: find_content
+        run: |
+          if [ -z "${{ github.event.inputs.date }}" ]; then
+            # 查找最新的内容文件
+            LATEST_FILE=$(find content/cn -name "*.md" -type f -not -name "_index.md" -not -name "about.md" -not -name "contact.md" | sort -r | head -1)
+          else
+            # 使用指定的日期
+            DATE="${{ github.event.inputs.date }}"
+            LATEST_FILE=$(find content/cn -name "${DATE}.md" -type f | head -1)
+          fi
+          
+          if [ -z "$LATEST_FILE" ]; then
+            echo "未找到内容文件"
+            exit 1
+          fi
+          
+          echo "file_path=$LATEST_FILE" >> $GITHUB_OUTPUT
+          echo "找到文件: $LATEST_FILE"
+
+      - name: Extract content metadata
+        id: extract_meta
+        run: |
+          FILE="${{ steps.find_content.outputs.file_path }}"
+          
+          # 提取 frontmatter
+          TITLE=$(grep -m 1 "^title:" "$FILE" | sed 's/^title: *"\(.*\)"/\1/' | sed "s/^title: *'\(.*\)'/\1/" | sed 's/^title: *\(.*\)/\1/')
+          DATE=$(grep -m 1 "^date:" "$FILE" | sed 's/^date: *\(.*\)/\1/')
+          DESCRIPTION=$(grep -m 1 "^description:" "$FILE" | sed 's/^description: *"\(.*\)"/\1/' | sed "s/^description: *'\(.*\)'/\1/" | sed 's/^description: *\(.*\)/\1/')
+          
+          # 提取正文内容（去除 frontmatter）
+          CONTENT=$(awk '/^---$/{if(++count==2)next} count>=2' "$FILE")
+          
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          echo "date=$DATE" >> $GITHUB_OUTPUT
+          echo "description=$DESCRIPTION" >> $GITHUB_OUTPUT
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          echo "$CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Sync to Notion
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+        run: |
+          node << 'EOF'
+          const { Client } = require('@notionhq/client');
+          
+          const notion = new Client({
+            auth: process.env.NOTION_TOKEN,
+          });
+          
+          const databaseId = process.env.NOTION_DATABASE_ID;
+          
+          const title = `${{ steps.extract_meta.outputs.title }}`;
+          const date = `${{ steps.extract_meta.outputs.date }}`;
+          const description = `${{ steps.extract_meta.outputs.description }}`;
+          const content = `${{ steps.extract_meta.outputs.content }}`;
+          
+          // 检查是否已存在相同日期的页面
+          const existingPages = await notion.databases.query({
+            database_id: databaseId,
+            filter: {
+              property: 'Date',
+              date: {
+                equals: date,
+              },
+            },
+          });
+          
+          if (existingPages.results.length > 0) {
+            console.log(`已存在日期为 ${date} 的页面，更新中...`);
+            const pageId = existingPages.results[0].id;
+            
+            // 更新页面标题
+            await notion.pages.update({
+              page_id: pageId,
+              properties: {
+                'Title': {
+                  title: [
+                    {
+                      text: {
+                        content: title,
+                      },
+                    },
+                  ],
+                },
+                'Description': {
+                  rich_text: [
+                    {
+                      text: {
+                        content: description || '',
+                      },
+                    },
+                  ],
+                },
+              },
+            });
+            
+            // 清空现有内容并添加新内容
+            const blocks = await notion.blocks.children.list({
+              block_id: pageId,
+            });
+            
+            for (const block of blocks.results) {
+              await notion.blocks.delete({
+                block_id: block.id,
+              });
+            }
+            
+            // 添加新内容（将 Markdown 转换为 Notion blocks）
+            const contentBlocks = convertMarkdownToBlocks(content);
+            await notion.blocks.children.append({
+              block_id: pageId,
+              children: contentBlocks,
+            });
+            
+            console.log('页面更新成功');
+          } else {
+            console.log(`创建新页面: ${title}`);
+            
+            // 创建新页面
+            const response = await notion.pages.create({
+              parent: {
+                database_id: databaseId,
+              },
+              properties: {
+                'Title': {
+                  title: [
+                    {
+                      text: {
+                        content: title,
+                      },
+                    },
+                  ],
+                },
+                'Date': {
+                  date: {
+                    start: date,
+                  },
+                },
+                'Description': {
+                  rich_text: [
+                    {
+                      text: {
+                        content: description || '',
+                      },
+                    },
+                  ],
+                },
+              },
+            });
+            
+            // 添加内容
+            const contentBlocks = convertMarkdownToBlocks(content);
+            await notion.blocks.children.append({
+              block_id: response.id,
+              children: contentBlocks,
+            });
+            
+            console.log('页面创建成功');
+          }
+          
+          // 简单的 Markdown 转 Notion blocks 函数
+          function convertMarkdownToBlocks(markdown) {
+            const blocks = [];
+            const lines = markdown.split('\n');
+            
+            for (const line of lines) {
+              if (!line.trim()) {
+                continue;
+              }
+              
+              // 标题
+              if (line.startsWith('# ')) {
+                blocks.push({
+                  object: 'block',
+                  type: 'heading_1',
+                  heading_1: {
+                    rich_text: [{ type: 'text', text: { content: line.substring(2).trim() } }],
+                  },
+                });
+              } else if (line.startsWith('## ')) {
+                blocks.push({
+                  object: 'block',
+                  type: 'heading_2',
+                  heading_2: {
+                    rich_text: [{ type: 'text', text: { content: line.substring(3).trim() } }],
+                  },
+                });
+              } else if (line.startsWith('### ')) {
+                blocks.push({
+                  object: 'block',
+                  type: 'heading_3',
+                  heading_3: {
+                    rich_text: [{ type: 'text', text: { content: line.substring(4).trim() } }],
+                  },
+                });
+              } else if (line.startsWith('- ') || line.startsWith('* ')) {
+                // 列表项
+                blocks.push({
+                  object: 'block',
+                  type: 'bulleted_list_item',
+                  bulleted_list_item: {
+                    rich_text: [{ type: 'text', text: { content: line.substring(2).trim() } }],
+                  },
+                });
+              } else if (line.match(/^\d+\. /)) {
+                // 有序列表
+                blocks.push({
+                  object: 'block',
+                  type: 'numbered_list_item',
+                  numbered_list_item: {
+                    rich_text: [{ type: 'text', text: { content: line.replace(/^\d+\. /, '').trim() } }],
+                  },
+                });
+              } else {
+                // 普通段落
+                blocks.push({
+                  object: 'block',
+                  type: 'paragraph',
+                  paragraph: {
+                    rich_text: [{ type: 'text', text: { content: line.trim() } }],
+                  },
+                });
+              }
+            }
+            
+            return blocks;
+          }
+          EOF
+
+      - name: Summary
+        run: |
+          echo "✅ 内容已同步到 Notion"
+          echo "📄 文件: ${{ steps.find_content.outputs.file_path }}"
+          echo "📅 日期: ${{ steps.extract_meta.outputs.date }}"
+          echo "📝 标题: ${{ steps.extract_meta.outputs.title }}"

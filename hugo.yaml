@@ -45,16 +45,16 @@ menu:
       weight: 1
     - identifier: blog
       name: 博客
-      pageRef: /blog
+      url: ""
       weight: 2
     - identifier: about      
       name: 关于我 ↗
-      url: "https://github.com/justlovemaki"
+      url: ""
       weight: 3
     - identifier: github   
       name: 同性交友
       weight: 4
-      url: "https://github.com/justlovemaki/CloudFlare-AI-Insight-Daily"
+      url: "https://github.com/july-lyan/Hextra-AI-Insight-Daily"
       params:
         icon: github
 
