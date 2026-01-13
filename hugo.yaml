@@ -86,8 +86,8 @@ params:
   dateFormat: "2006/01/02 15:04:05"
 
   navbar:
-    displayTitle: false
-    displayLogo: true
+    displayTitle: true
+    displayLogo: false
     logo:
       path: images/logo.png
       dark: images/logo-dark.png
