@@ -362,3 +362,64 @@ html:not(.dark) .footer-copyright a:hover {
   /* 悬停时变为纯黑色，并保持下划线，提供清晰的视觉反馈 */
   color: #000000;
 }
+
+/* =================================================================== */
+/*                      自定义 Logo 样式                                */
+/* =================================================================== */
+
+/* 隐藏原始 logo 图片 */
+.nav-container img[src*="logo"],
+.nav-container a[href="/"] img,
+.nav-container a[href="/Hextra-AI-Insight-Daily/"] img {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* 为 logo 链接添加自定义文字 */
+.nav-container a[href="/"],
+.nav-container a[href="/Hextra-AI-Insight-Daily/"] {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  text-decoration: none;
+}
+
+/* 在 logo 链接后添加自定义文字 */
+.nav-container a[href="/"]::after,
+.nav-container a[href="/Hextra-AI-Insight-Daily/"]::after {
+  content: "刘大雁";
+  display: inline-block;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin-right: 0.25rem;
+  white-space: nowrap;
+}
+
+.nav-container a[href="/"]::before,
+.nav-container a[href="/Hextra-AI-Insight-Daily/"]::before {
+  content: "AI日报";
+  display: inline-block;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #000000;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.125rem;
+  margin-left: 0;
+  white-space: nowrap;
+}
+
+/* 深色模式下的样式 */
+html.dark .nav-container a[href="/"]::after,
+html.dark .nav-container a[href="/Hextra-AI-Insight-Daily/"]::after {
+  color: #ffffff;
+}
+
+html.dark .nav-container a[href="/"]::before,
+html.dark .nav-container a[href="/Hextra-AI-Insight-Daily/"]::before {
+  color: #ffffff;
+  background-color: #000000;
+}
