@@ -12,9 +12,10 @@ on:
         required: true
         default: 'book' # <<< 请修改为你的源分支
 
-  # 也可以设置定时触发，例如每天凌晨1点 (UTC时间)
+  # 定时触发：每天两次
   schedule:
-    - cron: '0 22 * * *' # 每天 UTC 时间 0 点运行 (北京时间早上6点)
+    - cron: '0 22 * * *' # UTC 22:00 = 北京时间早上 6:00
+    - cron: '0 8 * * *'  # UTC 08:00 = 北京时间下午 4:00
 
 jobs:
   build-and-commit:
