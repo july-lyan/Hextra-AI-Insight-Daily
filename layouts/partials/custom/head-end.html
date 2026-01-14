@@ -39,7 +39,91 @@
 
 
 <script async src="//finicounter.eu.org/finicounter.js"></script>
-<script src="/adview_pic_cpc_cpm_cpa_guanggao_gg_guge__ads_300x250.js" type="text/javascript"></script> 
+<script src="/adview_pic_cpc_cpm_cpa_guanggao_gg_guge__ads_300x250.js" type="text/javascript"></script>
+
+{{/* 自定义 Logo 替换脚本 - 用文字替代图片，保留原有样式 */}}
+<script>
+(function() {
+  function replaceLogo() {
+    // 查找所有包含 logo 的图片
+    const logoImages = document.querySelectorAll('img[src*="logo"], a[href="/"] img, a[href="/Hextra-AI-Insight-Daily/"] img');
+    
+    logoImages.forEach(function(img) {
+      const parentLink = img.closest('a');
+      if (parentLink && (parentLink.getAttribute('href') === '/' || parentLink.getAttribute('href') === '/Hextra-AI-Insight-Daily/')) {
+        // 隐藏图片
+        img.style.display = 'none';
+        img.style.visibility = 'hidden';
+        img.style.width = '0';
+        img.style.height = '0';
+        
+        // 检查是否已经添加了自定义logo
+        if (!parentLink.querySelector('.custom-logo-wrapper')) {
+          // 创建自定义logo
+          const wrapper = document.createElement('span');
+          wrapper.className = 'custom-logo-wrapper';
+          wrapper.style.display = 'inline-flex';
+          wrapper.style.alignItems = 'center';
+          wrapper.style.textDecoration = 'none';
+          
+          const textPart = document.createElement('span');
+          textPart.className = 'custom-logo-text';
+          textPart.textContent = '刘大雁';
+          textPart.style.fontSize = '1.25rem';
+          textPart.style.fontWeight = '600';
+          textPart.style.color = document.documentElement.classList.contains('dark') ? '#ffffff' : '#1a202c';
+          textPart.style.marginRight = '0.25rem';
+          textPart.style.whiteSpace = 'nowrap';
+          
+          const boxPart = document.createElement('span');
+          boxPart.className = 'custom-logo-box';
+          boxPart.textContent = 'AI日报';
+          boxPart.style.fontSize = '1.25rem';
+          boxPart.style.fontWeight = '600';
+          boxPart.style.color = '#ffffff';
+          boxPart.style.backgroundColor = '#000000';
+          boxPart.style.padding = '0.25rem 0.5rem';
+          boxPart.style.borderRadius = '0.125rem';
+          boxPart.style.whiteSpace = 'nowrap';
+          
+          wrapper.appendChild(textPart);
+          wrapper.appendChild(boxPart);
+          parentLink.appendChild(wrapper);
+          
+          // 确保链接样式正确
+          parentLink.style.display = 'inline-flex';
+          parentLink.style.alignItems = 'center';
+          parentLink.style.textDecoration = 'none';
+        }
+      }
+    });
+  }
+  
+  // 页面加载后执行
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', replaceLogo);
+  } else {
+    replaceLogo();
+  }
+  
+  // 监听主题切换
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.attributeName === 'class') {
+        const textParts = document.querySelectorAll('.custom-logo-text');
+        textParts.forEach(function(el) {
+          el.style.color = document.documentElement.classList.contains('dark') ? '#ffffff' : '#1a202c';
+        });
+      }
+    });
+  });
+  
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class']
+  });
+})();
+</script> 
 <script type="text/javascript">
 if (typeof(killads) == 'undefined') {
 
